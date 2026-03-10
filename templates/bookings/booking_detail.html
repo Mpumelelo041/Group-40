@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Booking #{{ booking.id }}{% endblock %}
+{% block page_title %}Booking Detail{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- Status banner -->
+    <div class="alert alert-{% if booking.status == 'approved' %}success{% elif booking.status == 'rejected' %}danger{% elif booking.status == 'pending' %}warning{% else %}secondary{% endif %} mb-3"
+         style="border-radius:10px">
+      <i class="bi bi-{% if booking.status == 'approved' %}check-circle{% elif booking.status == 'rejected' %}x-circle{% elif booking.status == 'pending' %}hourglass-split{% else %}slash-circle{% endif %} me-2"></i>
+      Booking is <strong>{{ booking.status|title }}</strong>
+      {% if booking.admin_notes %}
+       — <span class="small">{{ booking.admin_notes }}</span>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar3 me-2"></i>{{ booking.title }}</span>
+        <span class="badge badge-{{ booking.status }} rounded-pill px-2 py-1" style="font-size:.75rem">
+          {{ booking.status|title }}
+        </span>
+      </div>
+      <div class="card-body">
+
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0">
+              <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;font-weight:700">Facility</div>
+              <div class="fw-700 mt-1" style="color:#1a3a5c">{{ booking.facility.name }}</div>
+              <div class="small text-muted">{{ booking.facility.location }}</div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0">
+              <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;font-weight:700">Date & Time</div>
+              <div class="fw-700 mt-1" style="color:#1a3a5c">{{ booking.booking_date.strftime('%A, %d %B %Y') }}</div>
+              <div class="small" style="font-family:'JetBrains Mono',monospace">
+                {{ booking.start_time.strftime('%H:%M') }} – {{ booking.end_time.strftime('%H:%M') }}
+                ({{ booking.duration_hours|round(1) }}h)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <table class="table table-borderless table-sm mb-4">
+          <tr>
+            <td class="small text-muted fw-600" style="width:160px">Booked By</td>
+            <td class="small">{{ booking.user.full_name }}
+              <span class="text-muted ms-1" style="font-family:'JetBrains Mono',monospace;font-size:.72rem">
+                ({{ booking.user.student_number }})
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="small text-muted fw-600">Attendees</td>
+            <td class="small">{{ booking.attendees }}</td>
+          </tr>
+          <tr>
+            <td class="small text-muted fw-600">Submitted</td>
+            <td class="small">{{ booking.created_at.strftime('%d %b %Y at %H:%M') }}</td>
+          </tr>
+          <tr>
+            <td class="small text-muted fw-600">Reason</td>
+            <td class="small">{{ booking.reason }}</td>
+          </tr>
+        </table>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{{ url_for('bookings.list_bookings') }}"
+             class="btn btn-outline-secondary btn-sm" style="border-radius:8px">
+            <i class="bi bi-arrow-left me-1"></i>Back
+          </a>
+
+          {% if booking.status == 'pending' and current_user.is_admin() %}
+          <a href="{{ url_for('admin.manage_requests') }}"
+             class="btn btn-accent btn-sm" style="border-radius:8px">
+            <i class="bi bi-clipboard-check me-1"></i>Review in Admin
+          </a>
+          {% endif %}
+
+          {% if booking.status == 'draft' and booking.user_id == current_user.id %}
+          <form method="POST" action="{{ url_for('bookings.submit_draft', booking_id=booking.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary btn-sm" style="border-radius:8px">
+              <i class="bi bi-send me-1"></i>Submit for Approval
+            </button>
+          </form>
+          {% endif %}
+
+          {% if booking.status in ['pending', 'approved', 'draft'] %}
+          {% if current_user.is_admin() or booking.user_id == current_user.id %}
+          <form method="POST" action="{{ url_for('bookings.cancel_booking', booking_id=booking.id) }}"
+                onsubmit="return confirm('Cancel this booking?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius:8px">
+              <i class="bi bi-x-circle me-1"></i>Cancel Booking
+            </button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

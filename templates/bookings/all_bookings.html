@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}All Bookings{% endblock %}
+{% block page_title %}All Bookings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span class="small text-muted">{{ bookings|length }} total booking(s)</span>
+  <a href="{{ url_for('admin.manage_requests') }}?status=pending"
+     class="btn btn-accent btn-sm" style="border-radius:8px">
+    <i class="bi bi-hourglass me-1"></i>Review Pending
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="small">#</th>
+            <th class="small">Title</th>
+            <th class="small">User</th>
+            <th class="small">Facility</th>
+            <th class="small">Date</th>
+            <th class="small">Time</th>
+            <th class="small">Status</th>
+            <th class="small">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for b in bookings %}
+        <tr>
+          <td class="small text-muted">#{{ b.id }}</td>
+          <td class="small fw-600" style="color:#1a3a5c">{{ b.title }}</td>
+          <td>
+            <div class="small fw-600">{{ b.user.full_name }}</div>
+            <div class="text-muted" style="font-size:.68rem;font-family:'JetBrains Mono',monospace">
+              {{ b.user.student_number }}
+            </div>
+          </td>
+          <td class="small text-muted">{{ b.facility.name }}</td>
+          <td class="small text-muted">{{ b.booking_date.strftime('%d %b %Y') }}</td>
+          <td class="small" style="font-family:'JetBrains Mono',monospace">
+            {{ b.start_time.strftime('%H:%M') }}–{{ b.end_time.strftime('%H:%M') }}
+          </td>
+          <td>
+            <span class="badge badge-{{ b.status }} rounded-pill px-2 py-1" style="font-size:.7rem">
+              {{ b.status|title }}
+            </span>
+          </td>
+          <td>
+            <a href="{{ url_for('bookings.booking_detail', booking_id=b.id) }}"
+               class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;border-radius:6px">
+              View
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-5">No bookings in the system yet.</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
